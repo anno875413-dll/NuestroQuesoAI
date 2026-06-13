@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+prophet
+xgboost
+scikit-learn
+matplotlib
+plotly
+openpyxl
+fastapi
+uvicorn
