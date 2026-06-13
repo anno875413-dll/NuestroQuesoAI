@@ -1,40 +1,22 @@
 import streamlit as st
 
-from models.xgboost_forecast import (
-    xgboost_forecast
-)
+from models.xgboost_forecast import xgboost_forecast
+from models.inventory_optimizer import current_inventory
+from models.production_planner import production_needed
+from models.spoilage_prediction import find_high_risk_batches
+from models.waste_reduction_engine import waste_actions
 
-from models.inventory_optimizer import (
-    current_inventory
-)
+from models.ensemble_forecast import ensemble_forecast
+from models.profit_optimizer import estimated_profit
+from models.milk_purchase_optimizer import milk_required
+from models.production_scheduler import weekly_schedule
+from models.temperature_forecast import temperature_risk
 
-from models.production_planner import (
-    production_needed
-)
-
-from models.spoilage_prediction import (
-    find_high_risk_batches
-)
-
-from models.waste_reduction_engine import (
-    waste_actions
-)
-
-from reports.sales_chart import (
-    create_sales_chart
-)
-
-from reports.inventory_chart import (
-    create_inventory_chart
-)
-
-from reports.savings_estimator import (
-    estimated_savings
-)
-
-from reports.loss_estimator import (
-    estimated_loss
-)
+from reports.sales_chart import create_sales_chart
+from reports.inventory_chart import create_inventory_chart
+from reports.savings_estimator import estimated_savings
+from reports.loss_estimator import estimated_loss
+from reports.pdf_report_generator import generate_pdf_data
 
 
 # --------------------------------------------------
@@ -45,9 +27,12 @@ st.set_page_config(
     page_title="Nuestro Queso AI Dashboard",
     layout="wide"
 )
-st.sidebar.title(
-    "Nuestro Queso AI"
-)
+
+# --------------------------------------------------
+# SIDEBAR
+# --------------------------------------------------
+
+st.sidebar.title("🧀 Nuestro Queso AI")
 
 page = st.sidebar.radio(
     "Navigation",
@@ -58,380 +43,288 @@ page = st.sidebar.radio(
         "Reports"
     ]
 )
-st.title("🧀 Nuestro Queso AI Dashboard")
 
-st.markdown(
-    """
-Forecast demand, optimize production,
-reduce spoilage, and improve profitability.
-"""
-)
+# ==================================================
+# DASHBOARD PAGE
+# ==================================================
 
+if page == "Dashboard":
 
-# --------------------------------------------------
-# DEMAND FORECASTS
-# --------------------------------------------------
+    st.title("🧀 Nuestro Queso AI Dashboard")
 
-st.header("Demand Forecast")
-
-queso_fresco_forecast = xgboost_forecast(
-    "Queso Fresco"
-)
-
-queso_oaxaca_forecast = xgboost_forecast(
-    "Queso Oaxaca"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-        "Queso Fresco 30-Day Demand",
-        queso_fresco_forecast
+    st.markdown(
+        """
+        Forecast demand, optimize production,
+        reduce spoilage, and improve profitability.
+        """
     )
 
-with col2:
+    st.header("Production Recommendations")
 
-    st.metric(
-        "Queso Oaxaca 30-Day Demand",
-        queso_oaxaca_forecast
-    )
+    col1, col2 = st.columns(2)
 
+    with col1:
 
-# --------------------------------------------------
-# INVENTORY
-# --------------------------------------------------
-
-st.header("Current Inventory")
-
-fresco_inventory = current_inventory(
-    "Queso Fresco"
-)
-
-oaxaca_inventory = current_inventory(
-    "Queso Oaxaca"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-        "Queso Fresco Inventory",
-        fresco_inventory
-    )
-
-with col2:
-
-    st.metric(
-        "Queso Oaxaca Inventory",
-        oaxaca_inventory
-    )
-
-
-# --------------------------------------------------
-# PRODUCTION RECOMMENDATIONS
-# --------------------------------------------------
-
-st.header("Production Recommendations")
-
-fresco_production = production_needed(
-    "Queso Fresco"
-)
-
-oaxaca_production = production_needed(
-    "Queso Oaxaca"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-        "Produce Queso Fresco",
-        fresco_production
-    )
-
-with col2:
-
-    st.metric(
-        "Produce Queso Oaxaca",
-        oaxaca_production
-    )
-
-
-# --------------------------------------------------
-# HIGH RISK INVENTORY
-# --------------------------------------------------
-
-st.header("High Risk Batches")
-
-high_risk = find_high_risk_batches()
-
-if high_risk.empty:
-
-    st.success(
-        "No high-risk inventory found."
-    )
-
-else:
-
-    st.dataframe(
-        high_risk
-    )
-
-
-# --------------------------------------------------
-# WASTE REDUCTION ACTIONS
-# --------------------------------------------------
-
-st.header("Waste Reduction Actions")
-
-actions = waste_actions()
-
-if len(actions) == 0:
-
-    st.success(
-        "No immediate actions required."
-    )
-
-else:
-
-    for action in actions:
-
-        st.warning(
-            action
+        st.metric(
+            "Produce Queso Fresco",
+            production_needed("Queso Fresco")
         )
 
+    with col2:
 
-# --------------------------------------------------
-# FINANCIAL IMPACT
-# --------------------------------------------------
-
-st.header("Financial Impact")
-
-potential_loss_avoided = estimated_savings(
-    spoiled_units=500,
-    cost_per_unit=4.50
-)
-
-inventory_value = estimated_loss()
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-        "Potential Loss Avoided ($)",
-        potential_loss_avoided
-    )
-
-with col2:
-
-    st.metric(
-        "Inventory Value ($)",
-        inventory_value
-    )
-
-
-# --------------------------------------------------
-# SALES CHART
-# --------------------------------------------------
-
-st.header("Historical Cheese Sales")
-
-sales_chart = create_sales_chart()
-
-st.plotly_chart(
-    sales_chart,
-    use_container_width=True
-)
-
-
-# --------------------------------------------------
-# INVENTORY CHART
-# --------------------------------------------------
-
-st.header("Inventory Levels")
-
-inventory_chart = create_inventory_chart()
-
-st.plotly_chart(
-    inventory_chart,
-    use_container_width=True
-)
-
-
-# --------------------------------------------------
-# FOOTER
-# --------------------------------------------------
-
-st.markdown("---")
-
-st.caption(
-    "Nuestro Queso AI • Demand Forecasting • Inventory Optimization • Spoilage Prevention"
-)
-from models.ensemble_forecast import (
-    ensemble_forecast
-)
-
-from models.profit_optimizer import (
-    estimated_profit
-)
-
-from models.milk_purchase_optimizer import (
-    milk_required
-)
-
-from models.production_scheduler import (
-    weekly_schedule
-)
-
-from models.temperature_forecast import (
-    temperature_risk
-)
-
-from reports.pdf_report_generator import (
-    generate_pdf_data
-)
-
-
-# --------------------------------------------------
-# ENSEMBLE FORECAST
-# --------------------------------------------------
-
-st.header(
-    "Ensemble Forecast"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-
-        "Queso Fresco Forecast",
-
-        ensemble_forecast(
-            "Queso Fresco"
+        st.metric(
+            "Produce Queso Oaxaca",
+            production_needed("Queso Oaxaca")
         )
+
+    st.header("Waste Reduction Actions")
+
+    actions = waste_actions()
+
+    if len(actions) == 0:
+
+        st.success(
+            "No immediate actions required."
+        )
+
+    else:
+
+        for action in actions:
+
+            st.warning(action)
+
+    st.header("Financial Impact")
+
+    potential_loss_avoided = estimated_savings(
+        spoiled_units=500,
+        cost_per_unit=4.50
     )
 
-with col2:
+    inventory_value = estimated_loss()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.metric(
+            "Potential Loss Avoided ($)",
+            potential_loss_avoided
+        )
+
+    with col2:
+
+        st.metric(
+            "Inventory Value ($)",
+            inventory_value
+        )
+
+    profit = estimated_profit(
+        revenue=100000,
+        production_cost=55000,
+        spoilage_loss=5000
+    )
 
     st.metric(
-
-        "Queso Oaxaca Forecast",
-
-        ensemble_forecast(
-            "Queso Oaxaca"
-        )
+        "Estimated Monthly Profit ($)",
+        profit
     )
 
+    st.header("Storage Temperature Risk")
 
- # --------------------------------------------------
-# MILK REQUIREMENTS
-# --------------------------------------------------
-
-st.header(
-    "Milk Requirements"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
+    risk = temperature_risk(38)
 
     st.metric(
+        "Current Risk",
+        risk
+    )
+    # ==================================================
+# FORECAST PAGE
+# ==================================================
 
-        "Milk Needed for Queso Fresco (lbs)",
+elif page == "Forecast":
 
-        milk_required(
-            "Queso Fresco"
-        )
+    st.title("📈 Forecast")
+
+    st.header("Demand Forecast")
+
+    queso_fresco_forecast = xgboost_forecast(
+        "Queso Fresco"
     )
 
-with col2:
+    queso_oaxaca_forecast = xgboost_forecast(
+        "Queso Oaxaca"
+    )
 
-    st.metric(
+    col1, col2 = st.columns(2)
 
-        "Milk Needed for Queso Oaxaca (lbs)",
+    with col1:
 
-        milk_required(
-            "Queso Oaxaca"
+        st.metric(
+            "Queso Fresco 30-Day Demand",
+            queso_fresco_forecast
         )
+
+    with col2:
+
+        st.metric(
+            "Queso Oaxaca 30-Day Demand",
+            queso_oaxaca_forecast
+        )
+
+    st.header(
+        "Ensemble Forecast"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.metric(
+            "Queso Fresco Ensemble Forecast",
+            ensemble_forecast(
+                "Queso Fresco"
+            )
+        )
+
+    with col2:
+
+        st.metric(
+            "Queso Oaxaca Ensemble Forecast",
+            ensemble_forecast(
+                "Queso Oaxaca"
+            )
+        )
+
+    st.header(
+        "Milk Requirements"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.metric(
+            "Milk Needed for Queso Fresco (lbs)",
+            milk_required(
+                "Queso Fresco"
+            )
+        )
+
+    with col2:
+
+        st.metric(
+            "Milk Needed for Queso Oaxaca (lbs)",
+            milk_required(
+                "Queso Oaxaca"
+            )
+        )
+
+    st.header(
+        "Historical Cheese Sales"
+    )
+
+    sales_chart = create_sales_chart()
+
+    st.plotly_chart(
+        sales_chart,
+        use_container_width=True
     )
 
 
-    # --------------------------------------------------
-# PROFIT ESTIMATOR
-# --------------------------------------------------
+# ==================================================
+# INVENTORY PAGE
+# ==================================================
 
-st.header(
-    "Estimated Profit"
-)
+elif page == "Inventory":
 
-profit = estimated_profit(
+    st.title("📦 Inventory")
 
-    revenue=100000,
+    st.header(
+        "Current Inventory"
+    )
 
-    production_cost=55000,
+    fresco_inventory = current_inventory(
+        "Queso Fresco"
+    )
 
-    spoilage_loss=5000
-)
+    oaxaca_inventory = current_inventory(
+        "Queso Oaxaca"
+    )
 
-st.metric(
+    col1, col2 = st.columns(2)
 
-    "Estimated Monthly Profit ($)",
+    with col1:
 
-    profit
-)
+        st.metric(
+            "Queso Fresco Inventory",
+            fresco_inventory
+        )
+
+    with col2:
+
+        st.metric(
+            "Queso Oaxaca Inventory",
+            oaxaca_inventory
+        )
+
+    st.header(
+        "High Risk Batches"
+    )
+
+    high_risk = find_high_risk_batches()
+
+    if high_risk.empty:
+
+        st.success(
+            "No high-risk inventory found."
+        )
+
+    else:
+
+        st.dataframe(
+            high_risk
+        )
+
+    st.header(
+        "Inventory Levels"
+    )
+
+    inventory_chart = create_inventory_chart()
+
+    st.plotly_chart(
+        inventory_chart,
+        use_container_width=True
+    )
 
 
-# --------------------------------------------------
-# WEEKLY PRODUCTION SCHEDULE
-# --------------------------------------------------
+# ==================================================
+# REPORTS PAGE
+# ==================================================
 
-st.header(
-    "Weekly Production Schedule"
-)
+elif page == "Reports":
 
-schedule = weekly_schedule()
+    st.title("📄 Reports")
 
-st.table(
-    schedule
-)
+    st.header(
+        "Weekly Production Schedule"
+    )
 
+    schedule = weekly_schedule()
 
-# --------------------------------------------------
-# STORAGE TEMPERATURE RISK
-# --------------------------------------------------
+    st.table(
+        schedule
+    )
 
-st.header(
-    "Storage Temperature Risk"
-)
+    st.header(
+        "Daily Report"
+    )
 
-risk = temperature_risk(
-    38
-)
+    st.write(
+        generate_pdf_data()
+    )
 
-st.metric(
+    st.markdown("---")
 
-    "Current Risk",
-
-    risk
-)
-
-
-# --------------------------------------------------
-# DAILY REPORT
-# --------------------------------------------------
-
-st.header(
-    "Daily Report"
-)
-
-st.write(
-
-    generate_pdf_data()
-)
+    st.caption(
+        "Nuestro Queso AI • Demand Forecasting • Inventory Optimization • Spoilage Prevention"
+    )
